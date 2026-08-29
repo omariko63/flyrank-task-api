@@ -44,23 +44,23 @@ async def root():
 async def health():
     return {"status": "ok"}
 
-@app.get("/tasks")
+@app.get("/tasks", description="returns a list of all tasks")
 async def get_tasks():
     return tasks
 
-@app.get("/tasks/{id}")
+@app.get("/tasks/{id}", description= "returns task by ID")
 async def get_task_by_id(id: int):
     for task in tasks:
         if task["id"] == id:
             return task
         
-        return JSONResponse(
-        status_code=404,
-        content={"error": f"Task {id} not found"}
+    return JSONResponse(
+    status_code=404,
+    content={"error": f"Task {id} not found"}
     )
 
 
-@app.post("/tasks", status_code=201)
+@app.post("/tasks", status_code=201, description="creates a new task")
 async def create_task(task: TaskCreate):
     if task.title is None or not task.title.strip():
         return JSONResponse(
@@ -80,7 +80,7 @@ async def create_task(task: TaskCreate):
 
     return new_task
 
-@app.put("/tasks/{id}")
+@app.put("/tasks/{id}", description="updates task by ID")
 async def update_task(id: int, updated_task: TaskUpdate):
     for task in tasks:
         if task["id"] == id:
@@ -110,7 +110,7 @@ async def update_task(id: int, updated_task: TaskUpdate):
         content={"error": f"Task {id} not found"}
     )
 
-@app.delete("/tasks/{id}", status_code=204)
+@app.delete("/tasks/{id}", status_code=204, description="deletes task by id")
 async def delete_task(id: int):
     for index, task in enumerate(tasks):
         if task["id"] == id:
