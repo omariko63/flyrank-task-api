@@ -96,17 +96,24 @@ async def create_task(task: TaskCreate):
             content={"error": "Title is required and cannot be empty"}
         )
 
-    new_id = max(t["id"] for t in tasks) + 1
+    conn = get_db_connection()
 
-    new_task = {
+    cursor = conn.execute(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)",
+        (task.title, False)
+    )
+
+    conn.commit()
+
+    new_id = cursor.lastrowid
+
+    conn.close()
+
+    return {
         "id": new_id,
         "title": task.title,
-        "done": False,
+        "done": False
     }
-
-    tasks.append(new_task)
-
-    return new_task
 
 @app.put("/tasks/{id}", description="updates task by ID")
 async def update_task(id: int, updated_task: TaskUpdate):
