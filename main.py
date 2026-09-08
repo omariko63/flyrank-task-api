@@ -46,6 +46,11 @@ init_db()
 
 tasks = []
 
+def get_db_connection():
+    conn = sqlite3.connect("tasks.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
 @app.get("/")
 async def root():
     return {
@@ -60,18 +65,27 @@ async def health():
 
 @app.get("/tasks", description="returns a list of all tasks")
 async def get_tasks():
-    return tasks
+    conn = get_db_connection()
+    rows = conn.execute("SELECT id, title, done FROM tasks").fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
 
-@app.get("/tasks/{id}", description= "returns task by ID")
+
+@app.get("/tasks/{id}", description="returns task by ID")
 async def get_task_by_id(id: int):
-    for task in tasks:
-        if task["id"] == id:
-            return task
-        
-    return JSONResponse(
-    status_code=404,
-    content={"error": f"Task {id} not found"}
-    )
+    conn = get_db_connection()
+    row = conn.execute(
+        "SELECT id, title, done FROM tasks WHERE id = ?",
+        (id,)
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Task not found"}
+        )
+    return dict(row)
 
 
 @app.post("/tasks", status_code=201, description="creates a new task")
